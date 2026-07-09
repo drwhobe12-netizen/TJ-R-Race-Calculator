@@ -124,6 +124,8 @@
     input[type=range]::-moz-range-track{ height:6px; }
     .legend{ gap:16px; flex-wrap:wrap; justify-content:center; }
     footer{ font-size: 11px; }
+    .mini-select{ font-size: 16px; padding: 10px; }
+    .toggle-row{ margin-bottom: 18px; padding-bottom: 16px; }
   }
   .card{
     background: var(--asphalt-2);
@@ -159,6 +161,85 @@
   }
   .field{ margin-bottom: 26px; }
   .field:last-child{ margin-bottom: 0; }
+
+  .mini-select{
+    width: 100%;
+    margin-top: 10px;
+    background: var(--asphalt);
+    color: var(--grey);
+    border: 1px solid var(--grey-dim);
+    border-radius: 6px;
+    padding: 8px 10px;
+    font-size: 13px;
+    font-family: 'IBM Plex Mono', monospace;
+    appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8'><path d='M1 1l5 5 5-5' stroke='%237C8894' stroke-width='1.5' fill='none'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor:pointer;
+  }
+  .mini-select:disabled{
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .toggle-row{
+    display:flex;
+    align-items:center;
+    gap: 12px;
+    margin-bottom: 22px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--asphalt-3);
+  }
+  .toggle-switch{
+    position: relative;
+    display:inline-block;
+    cursor:pointer;
+  }
+  .toggle-switch input{
+    position:absolute;
+    opacity:0;
+    width:100%;
+    height:100%;
+    margin:0;
+    cursor:pointer;
+    z-index:2;
+  }
+  .toggle-track{
+    display:block;
+    width: 46px;
+    height: 26px;
+    background: var(--asphalt-3);
+    border: 1px solid var(--grey-dim);
+    border-radius: 999px;
+    position: relative;
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .toggle-thumb{
+    position:absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: var(--lane-white);
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+  }
+  .toggle-switch input:checked + .toggle-track{
+    background: var(--track-red);
+    border-color: var(--track-red);
+  }
+  .toggle-switch input:checked + .toggle-track .toggle-thumb{
+    transform: translateX(20px);
+  }
+  .toggle-label{
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--lane-white);
+  }
+  .field.disabled-field{
+    opacity: 0.4;
+  }
 
   select{
     width:100%;
@@ -387,6 +468,7 @@
           </div>
           <input type="range" id="runPace" min="210" max="600" step="5" value="390">
           <div class="slider-range"><span>3:30</span><span>10:00</span></div>
+          <select id="runPaceSelect" class="mini-select"></select>
         </div>
         <div class="field">
           <div class="slider-row">
@@ -395,26 +477,38 @@
           </div>
           <input type="range" id="walkPace" min="420" max="960" step="5" value="630">
           <div class="slider-range"><span>7:00</span><span>16:00</span></div>
+          <select id="walkPaceSelect" class="mini-select"></select>
         </div>
       </div>
 
       <div class="card ratio-slider">
         <h2>Run : Walk Intervals</h2>
-        <div class="field">
+
+        <div class="toggle-row">
+          <label class="toggle-switch">
+            <input type="checkbox" id="runOnlyToggle">
+            <span class="toggle-track"><span class="toggle-thumb"></span></span>
+          </label>
+          <span class="toggle-label">Running only — no walk breaks</span>
+        </div>
+
+        <div class="field" id="runIntervalField">
           <div class="slider-row">
             <label style="margin-bottom:0;">Run interval length</label>
-            <span class="slider-value" id="runIntervalVal">9 min</span>
+            <span class="slider-value" id="runIntervalVal">9:00</span>
           </div>
-          <input type="range" id="runInterval" min="1" max="60" step="1" value="9">
-          <div class="slider-range"><span>1 min</span><span>60 min</span></div>
+          <input type="range" id="runInterval" min="0.5" max="60" step="0.5" value="9">
+          <div class="slider-range"><span>0:30</span><span>60 min</span></div>
+          <select id="runIntervalSelect" class="mini-select"></select>
         </div>
-        <div class="field" style="margin-bottom:0;">
+        <div class="field" id="walkIntervalField" style="margin-bottom:0;">
           <div class="slider-row">
             <label style="margin-bottom:0;">Walk interval length</label>
             <span class="slider-value" id="walkIntervalVal">1:00</span>
           </div>
           <input type="range" id="walkInterval" min="0" max="20" step="0.5" value="1">
           <div class="slider-range"><span>0:00 (run only)</span><span>20:00</span></div>
+          <select id="walkIntervalSelect" class="mini-select"></select>
         </div>
         <div class="field" style="margin-bottom:0; margin-top:18px;">
           <div class="slider-row">
@@ -482,6 +576,16 @@ const walkPaceSlider = document.getElementById('walkPace');
 const runIntervalSlider = document.getElementById('runInterval');
 const walkIntervalSlider = document.getElementById('walkInterval');
 
+const runPaceSelect = document.getElementById('runPaceSelect');
+const walkPaceSelect = document.getElementById('walkPaceSelect');
+const runIntervalSelect = document.getElementById('runIntervalSelect');
+const walkIntervalSelect = document.getElementById('walkIntervalSelect');
+const runOnlyToggle = document.getElementById('runOnlyToggle');
+const runIntervalField = document.getElementById('runIntervalField');
+const walkIntervalField = document.getElementById('walkIntervalField');
+
+let lastWalkIntervalValue = walkIntervalSlider.value;
+
 function secToPace(sec){
   const m = Math.floor(sec/60);
   const s = Math.round(sec%60);
@@ -510,6 +614,47 @@ function updateSliderFill(slider){
   const pct = (slider.value - slider.min) / (slider.max - slider.min) * 100;
   slider.style.setProperty('--fill', pct + '%');
 }
+
+function populateSelect(select, min, max, step, labelFn){
+  select.innerHTML = '';
+  const steps = Math.round((max-min)/step);
+  for(let i=0;i<=steps;i++){
+    const val = min + i*step;
+    const opt = document.createElement('option');
+    opt.value = val.toString();
+    opt.textContent = labelFn(val);
+    select.appendChild(opt);
+  }
+}
+
+populateSelect(runPaceSelect, 210, 600, 5, v => secToPace(v)+' /km');
+populateSelect(walkPaceSelect, 420, 960, 5, v => secToPace(v)+' /km');
+populateSelect(runIntervalSelect, 0.5, 60, 0.5, v => minToMMSS(v));
+populateSelect(walkIntervalSelect, 0, 20, 0.5, v => v===0 ? '0:00 (off)' : minToMMSS(v));
+
+runPaceSelect.addEventListener('change', () => { runPaceSlider.value = runPaceSelect.value; update(); });
+walkPaceSelect.addEventListener('change', () => { walkPaceSlider.value = walkPaceSelect.value; update(); });
+runIntervalSelect.addEventListener('change', () => { runIntervalSlider.value = runIntervalSelect.value; update(); });
+walkIntervalSelect.addEventListener('change', () => { walkIntervalSlider.value = walkIntervalSelect.value; update(); });
+
+runOnlyToggle.addEventListener('change', () => {
+  const isRunOnly = runOnlyToggle.checked;
+  if(isRunOnly){
+    if(parseFloat(walkIntervalSlider.value) > 0){
+      lastWalkIntervalValue = walkIntervalSlider.value;
+    }
+    walkIntervalSlider.value = '0';
+  } else {
+    walkIntervalSlider.value = lastWalkIntervalValue && parseFloat(lastWalkIntervalValue) > 0 ? lastWalkIntervalValue : '1';
+  }
+  runIntervalSlider.disabled = isRunOnly;
+  walkIntervalSlider.disabled = isRunOnly;
+  runIntervalSelect.disabled = isRunOnly;
+  walkIntervalSelect.disabled = isRunOnly;
+  runIntervalField.classList.toggle('disabled-field', isRunOnly);
+  walkIntervalField.classList.toggle('disabled-field', isRunOnly);
+  update();
+});
 
 function simulate(distanceKm, runPaceMinPerKm, walkPaceMinPerKm, runMin, walkMin){
   const runSpeed = 1/runPaceMinPerKm; // km per min
@@ -591,18 +736,23 @@ function update(){
   const distanceKm = parseFloat(distanceSel.value);
   const runPaceSec = parseInt(runPaceSlider.value);
   const walkPaceSec = parseInt(walkPaceSlider.value);
-  const runMin = parseInt(runIntervalSlider.value);
+  const runMin = parseFloat(runIntervalSlider.value);
   const walkMin = parseFloat(walkIntervalSlider.value);
 
   document.getElementById('runPaceVal').textContent = secToPace(runPaceSec) + ' /km';
   document.getElementById('walkPaceVal').textContent = secToPace(walkPaceSec) + ' /km';
-  document.getElementById('runIntervalVal').textContent = runMin + ' min';
+  document.getElementById('runIntervalVal').textContent = minToMMSS(runMin);
   document.getElementById('walkIntervalVal').textContent = walkMin === 0 ? '0:00 (off)' : minToMMSS(walkMin);
+
+  runPaceSelect.value = String(runPaceSec);
+  walkPaceSelect.value = String(walkPaceSec);
+  runIntervalSelect.value = String(runMin);
+  walkIntervalSelect.value = String(walkMin);
 
   if(walkMin === 0){
     document.getElementById('ratioDisplay').textContent = 'Run only — no walk breaks';
   } else {
-    document.getElementById('ratioDisplay').textContent = runMin + ' min : ' + minToMMSS(walkMin);
+    document.getElementById('ratioDisplay').textContent = minToMMSS(runMin) + ' : ' + minToMMSS(walkMin);
   }
 
   updateSliderFill(runPaceSlider);
