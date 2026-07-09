@@ -94,10 +94,28 @@
   .grid{
     display:grid;
     grid-template-columns: 380px 1fr;
+    grid-template-areas:
+      "distance finish"
+      "paces finish"
+      "intervals splitloop";
     gap: 22px;
   }
+  .area-distance{ grid-area: distance; }
+  .area-finish{ grid-area: finish; }
+  .area-paces{ grid-area: paces; }
+  .area-intervals{ grid-area: intervals; }
+  .area-splitloop{ grid-area: splitloop; }
+
   @media (max-width: 820px){
-    .grid{ grid-template-columns: 1fr; }
+    .grid{
+      grid-template-columns: 1fr;
+      grid-template-areas:
+        "distance"
+        "finish"
+        "paces"
+        "intervals"
+        "splitloop";
+    }
   }
   @media (max-width: 480px){
     .wrap{ padding: 18px 14px 40px; }
@@ -107,7 +125,6 @@
     .eyebrow{ font-size: 10px; letter-spacing: 2px; }
     .sub{ font-size: 13px; }
     .card{ padding: 16px; }
-    .card + .card{ margin-top: 16px; }
     .card h2{ font-size: 11px; margin-bottom: 16px; }
     .grid{ gap: 16px; }
     .time-big{ font-size: 52px; }
@@ -133,7 +150,6 @@
     border-radius: 10px;
     padding: 24px;
   }
-  .card + .card{ margin-top: 22px; }
   .card h2{
     font-family:'IBM Plex Mono', monospace;
     font-size: 12px;
@@ -442,123 +458,117 @@
   </header>
 
   <div class="grid">
-    <!-- CONTROLS -->
-    <div>
-      <div class="card">
-        <h2>Race Distance</h2>
-        <div class="field">
-          <select id="distance">
-            <option value="5">5K — 3.11 mi</option>
-            <option value="8.04672">5 Miles</option>
-            <option value="10">10K — 6.21 mi</option>
-            <option value="16.0934">10 Mile</option>
-            <option value="21.0975" selected>Half Marathon — 13.11 mi</option>
-            <option value="42.195">Marathon — 26.22 mi</option>
-            <option value="50">Ultra Marathon — 50K (31.07 mi)</option>
-          </select>
+    <div class="card area-distance">
+      <h2>Race Distance</h2>
+      <div class="field">
+        <select id="distance">
+          <option value="5">5K — 3.11 mi</option>
+          <option value="8.04672">5 Miles</option>
+          <option value="10">10K — 6.21 mi</option>
+          <option value="16.0934">10 Mile</option>
+          <option value="21.0975" selected>Half Marathon — 13.11 mi</option>
+          <option value="42.195">Marathon — 26.22 mi</option>
+          <option value="50">Ultra Marathon — 50K (31.07 mi)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card area-finish">
+      <h2>Projected Finish</h2>
+      <div class="stopwatch">
+        <div>
+          <div class="time-big" id="totalTime">54:12</div>
+          <div class="time-unit">PROJECTED FINISH TIME</div>
         </div>
+        <span class="badge pace" id="avgPace">6:44 /km</span>
       </div>
 
-      <div class="card">
-        <h2>Paces</h2>
-        <div class="field">
-          <div class="slider-row">
-            <label style="margin-bottom:0;">Running pace</label>
-            <span class="slider-value" id="runPaceVal">6:30 /km</span>
-          </div>
-          <input type="range" id="runPace" min="210" max="600" step="5" value="390">
-          <div class="slider-range"><span>3:30</span><span>10:00</span></div>
-          <select id="runPaceSelect" class="mini-select"></select>
+      <div class="stat-grid">
+        <div class="stat run">
+          <div class="k">Run Time</div>
+          <div class="v" id="runTime">–</div>
         </div>
-        <div class="field">
-          <div class="slider-row">
-            <label style="margin-bottom:0;">Walking pace</label>
-            <span class="slider-value" id="walkPaceVal">10:30 /km</span>
-          </div>
-          <input type="range" id="walkPace" min="420" max="960" step="5" value="630">
-          <div class="slider-range"><span>7:00</span><span>16:00</span></div>
-          <select id="walkPaceSelect" class="mini-select"></select>
+        <div class="stat walk">
+          <div class="k">Walk Time</div>
+          <div class="v" id="walkTime">–</div>
         </div>
-      </div>
-
-      <div class="card ratio-slider">
-        <h2>Run : Walk Intervals</h2>
-
-        <div class="toggle-row">
-          <label class="toggle-switch">
-            <input type="checkbox" id="runOnlyToggle">
-            <span class="toggle-track"><span class="toggle-thumb"></span></span>
-          </label>
-          <span class="toggle-label">Running only — no walk breaks</span>
+        <div class="stat run">
+          <div class="k">Run Distance</div>
+          <div class="v" id="runDist">–</div>
         </div>
-
-        <div class="field" id="runIntervalField">
-          <div class="slider-row">
-            <label style="margin-bottom:0;">Run interval length</label>
-            <span class="slider-value" id="runIntervalVal">9:00</span>
-          </div>
-          <input type="range" id="runInterval" min="0.5" max="60" step="0.5" value="9">
-          <div class="slider-range"><span>0:30</span><span>60 min</span></div>
-          <select id="runIntervalSelect" class="mini-select"></select>
-        </div>
-        <div class="field" id="walkIntervalField" style="margin-bottom:0;">
-          <div class="slider-row">
-            <label style="margin-bottom:0;">Walk interval length</label>
-            <span class="slider-value" id="walkIntervalVal">1:00</span>
-          </div>
-          <input type="range" id="walkInterval" min="0" max="20" step="0.5" value="1">
-          <div class="slider-range"><span>0:00 (run only)</span><span>20:00</span></div>
-          <select id="walkIntervalSelect" class="mini-select"></select>
-        </div>
-        <div class="field" style="margin-bottom:0; margin-top:18px;">
-          <div class="slider-row">
-            <label style="margin-bottom:0; color:var(--grey);">Ratio</label>
-            <span class="slider-value" id="ratioDisplay" style="color:var(--grey);">9 : 1</span>
-          </div>
+        <div class="stat walk">
+          <div class="k">Walk Distance</div>
+          <div class="v" id="walkDist">–</div>
         </div>
       </div>
     </div>
 
-    <!-- RESULTS -->
-    <div>
-      <div class="card">
-        <h2>Projected Finish</h2>
-        <div class="stopwatch">
-          <div>
-            <div class="time-big" id="totalTime">54:12</div>
-            <div class="time-unit">PROJECTED FINISH TIME</div>
-          </div>
-          <span class="badge pace" id="avgPace">6:44 /km</span>
+    <div class="card area-paces">
+      <h2>Paces</h2>
+      <div class="field">
+        <div class="slider-row">
+          <label style="margin-bottom:0;">Running pace</label>
+          <span class="slider-value" id="runPaceVal">6:30 /km</span>
         </div>
+        <input type="range" id="runPace" min="210" max="600" step="5" value="390">
+        <div class="slider-range"><span>3:30</span><span>10:00</span></div>
+        <select id="runPaceSelect" class="mini-select"></select>
+      </div>
+      <div class="field">
+        <div class="slider-row">
+          <label style="margin-bottom:0;">Walking pace</label>
+          <span class="slider-value" id="walkPaceVal">10:30 /km</span>
+        </div>
+        <input type="range" id="walkPace" min="420" max="960" step="5" value="630">
+        <div class="slider-range"><span>7:00</span><span>16:00</span></div>
+        <select id="walkPaceSelect" class="mini-select"></select>
+      </div>
+    </div>
 
-        <div class="stat-grid">
-          <div class="stat run">
-            <div class="k">Run Time</div>
-            <div class="v" id="runTime">–</div>
-          </div>
-          <div class="stat walk">
-            <div class="k">Walk Time</div>
-            <div class="v" id="walkTime">–</div>
-          </div>
-          <div class="stat run">
-            <div class="k">Run Distance</div>
-            <div class="v" id="runDist">–</div>
-          </div>
-          <div class="stat walk">
-            <div class="k">Walk Distance</div>
-            <div class="v" id="walkDist">–</div>
-          </div>
+    <div class="card area-splitloop">
+      <h2>Split Loop</h2>
+      <div class="track-wrap">
+        <svg id="trackSvg" viewBox="0 0 400 210" width="100%" style="max-width:420px;"></svg>
+        <div class="legend">
+          <span><span class="swatch run"></span>Run <span id="legendRunCount" style="color:var(--grey-dim);"></span></span>
+          <span><span class="swatch walk"></span>Walk <span id="legendWalkCount" style="color:var(--grey-dim);"></span></span>
         </div>
       </div>
+    </div>
 
-      <div class="card">
-        <h2>Split Loop</h2>
-        <div class="track-wrap">
-          <svg id="trackSvg" viewBox="0 0 400 210" width="100%" style="max-width:420px;"></svg>
-          <div class="legend">
-            <span><span class="swatch run"></span>Run <span id="legendRunCount" style="color:var(--grey-dim);"></span></span>
-            <span><span class="swatch walk"></span>Walk <span id="legendWalkCount" style="color:var(--grey-dim);"></span></span>
-          </div>
+    <div class="card ratio-slider area-intervals">
+      <h2>Run : Walk Intervals</h2>
+
+      <div class="toggle-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="runOnlyToggle">
+          <span class="toggle-track"><span class="toggle-thumb"></span></span>
+        </label>
+        <span class="toggle-label">Running only — no walk breaks</span>
+      </div>
+
+      <div class="field" id="runIntervalField">
+        <div class="slider-row">
+          <label style="margin-bottom:0;">Run interval length</label>
+          <span class="slider-value" id="runIntervalVal">9:00</span>
+        </div>
+        <input type="range" id="runInterval" min="0.5" max="60" step="0.5" value="9">
+        <div class="slider-range"><span>0:30</span><span>60 min</span></div>
+        <select id="runIntervalSelect" class="mini-select"></select>
+      </div>
+      <div class="field" id="walkIntervalField" style="margin-bottom:0;">
+        <div class="slider-row">
+          <label style="margin-bottom:0;">Walk interval length</label>
+          <span class="slider-value" id="walkIntervalVal">1:00</span>
+        </div>
+        <input type="range" id="walkInterval" min="0" max="20" step="0.5" value="1">
+        <div class="slider-range"><span>0:00 (run only)</span><span>20:00</span></div>
+        <select id="walkIntervalSelect" class="mini-select"></select>
+      </div>
+      <div class="field" style="margin-bottom:0; margin-top:18px;">
+        <div class="slider-row">
+          <label style="margin-bottom:0; color:var(--grey);">Ratio</label>
+          <span class="slider-value" id="ratioDisplay" style="color:var(--grey);">9 : 1</span>
         </div>
       </div>
     </div>
