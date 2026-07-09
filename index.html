@@ -581,6 +581,19 @@
 
 <script>
 const distanceSel = document.getElementById('distance');
+
+const DISTANCE_STORAGE_KEY = 'thrapstonRacePlanner.lastDistance';
+try{
+  const savedDistance = localStorage.getItem(DISTANCE_STORAGE_KEY);
+  if(savedDistance){
+    const matchExists = Array.from(distanceSel.options).some(o => o.value === savedDistance);
+    if(matchExists){ distanceSel.value = savedDistance; }
+  }
+}catch(e){ /* storage unavailable (e.g. in-chat preview sandbox) — falls back to the default distance */ }
+
+distanceSel.addEventListener('change', () => {
+  try{ localStorage.setItem(DISTANCE_STORAGE_KEY, distanceSel.value); }catch(e){}
+});
 const runPaceSlider = document.getElementById('runPace');
 const walkPaceSlider = document.getElementById('walkPace');
 const runIntervalSlider = document.getElementById('runInterval');
